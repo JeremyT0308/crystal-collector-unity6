@@ -18,7 +18,7 @@ namespace CrystalCollector
         public RectTransform howToPlayPanel;
         public RectTransform titleTransform;
         public SceneTransition transition;
-        public ProceduralAudio audio;
+        public new ProceduralAudio audio;
 
         private void Awake()
         {

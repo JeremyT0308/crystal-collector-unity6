@@ -23,7 +23,7 @@ namespace CrystalCollector
         public PlayerMovement player;
         public GameHUD hud;
         public SceneTransition transition;
-        public ProceduralAudio audio;
+        public new ProceduralAudio audio;
         public int totalCrystals = 8;
 
         public GameState State { get; private set; }
