@@ -51,6 +51,7 @@ namespace CrystalCollector
                     particle.Emit(12);
                 }
             }
+            GetComponentInParent<PedestalPresentation>()?.PlayDeactivation();
             StartCoroutine(PickupRoutine());
         }
 

@@ -91,6 +91,9 @@ namespace CrystalCollector.EditorTools
             }
 
             Check(RuntimeSourceHasNoCollectionCallbacks(), "No runtime C# trigger-based collection implementation detected");
+            Check(QuitSourceHasEditorSafePath(), "Quit uses EditorApplication in the Editor and Application.Quit in players");
+            Check(new[] { "ArchitectureDark.mat", "ArchitectureMetal.mat", "ArchitectureAccent.mat", "FloorBase.mat", "FloorPanel.mat", "FloorEmission.mat", "CrystalCore.mat", "CrystalShard.mat", "Pedestal.mat", "EnergyRing.mat", "PlayerBody.mat", "PlayerDark.mat", "PlayerEnergy.mat" }
+                .All(name => File.Exists(MaterialsRootPath(name))), "V3 material library exists");
 
             var previousScenePath = SceneManager.GetActiveScene().path;
             if (mainGame != null)
@@ -98,11 +101,16 @@ namespace CrystalCollector.EditorTools
                 var gameScene = EditorSceneManager.OpenScene(CrystalCollectorGenerator.MainGameScenePath, OpenSceneMode.Single);
                 var crystals = UnityEngine.Object.FindObjectsByType<CollectiblePresentation>(FindObjectsSortMode.None);
                 Check(crystals.Length == 8, "Exactly 8 gameplay crystals exist");
+                Check(new[] { "CentralNexus", "North_ReactorCore", "East_ResearchLab", "South_CrystalVault", "West_Forge" }
+                    .All(name => GameObject.Find(name) != null), "Central Nexus and all four named sectors exist");
+                Check(UnityEngine.Object.FindFirstObjectByType<NexusPresentation>() != null, "Central Nexus has landmark presentation controller");
                 var triggerCount = crystals.Count(crystal => crystal.GetComponent<Collider>() != null && crystal.GetComponent<Collider>().isTrigger);
                 Check(triggerCount == 8, "All collectibles have trigger colliders");
                 var machines = crystals.Select(crystal => crystal.GetComponent<ScriptMachine>()).ToArray();
                 Check(machines.All(machine => machine != null), "All collectibles have Script Machines");
                 Check(machines.All(machine => machine != null && machine.nest.macro == graph), "All collectibles reference CollectCrystal graph");
+                Check(crystals.All(crystal => crystal.GetComponentInParent<PedestalPresentation>() != null), "Every gameplay crystal is mounted on a presentation-only pedestal");
+                Check(UnityEngine.Object.FindObjectsByType<ScriptMachine>(FindObjectsSortMode.None).Length == 8, "Decorative environment has no extra Script Machines");
                 var hud = UnityEngine.Object.FindFirstObjectByType<GameHUD>();
                 Check(hud != null && hud.pauseGroup != null && hud.victoryGroup != null, "Gameplay HUD, pause panel, and victory panel exist");
                 Check(hud != null && hud.resumeButton != null && hud.restartButton != null && hud.pauseMenuButton != null, "Pause buttons are assigned");
@@ -129,9 +137,10 @@ namespace CrystalCollector.EditorTools
                 Check(UnityEngine.Object.FindObjectsByType<InputSystemUIInputModule>(FindObjectsSortMode.None).Length == 1, "Main Menu EventSystem uses InputSystemUIInputModule");
                 Check(UnityEngine.Object.FindObjectsByType<GraphicRaycaster>(FindObjectsSortMode.None).Length >= 1, "Main Menu Canvas has GraphicRaycaster");
                 Check(menu != null && menu.howToPlayGroup != null && menu.howToPlayBackButton != null, "How To Play panel and BACK button are assigned");
+                Check(GameObject.Find("ShowcaseCrystal") != null && GameObject.Find("MenuWorld") != null, "Main Menu has its hero crystal and world backdrop");
                 var menuTransition = UnityEngine.Object.FindFirstObjectByType<SceneTransition>();
                 Check(menuTransition != null, "Main Menu transition overlay exists");
-                Check(UnityEngine.Object.FindFirstObjectByType<Camera>() != null, "Menu camera exists");
+                Check(UnityEngine.Object.FindFirstObjectByType<Camera>() != null && UnityEngine.Object.FindFirstObjectByType<MenuCameraMotion>() != null, "Menu camera and cinematic motion exist");
                 RestoreScene(previousScenePath, menuScene);
             }
 
@@ -156,6 +165,19 @@ namespace CrystalCollector.EditorTools
             var callbackPattern = new Regex(@"\b(OnTriggerEnter|OnTriggerStay|OnCollisionEnter|OnCollisionStay)\s*\(", RegexOptions.Compiled);
             return Directory.GetFiles("Assets/Scripts/Runtime", "*.cs", SearchOption.AllDirectories)
                 .All(path => !callbackPattern.IsMatch(File.ReadAllText(path)));
+        }
+
+        private static bool QuitSourceHasEditorSafePath()
+        {
+            var path = "Assets/Scripts/Runtime/UI/MenuController.cs";
+            if (!File.Exists(path)) return false;
+            var source = File.ReadAllText(path);
+            return source.Contains("#if UNITY_EDITOR") && source.Contains("UnityEditor.EditorApplication.isPlaying = false") && source.Contains("Application.Quit();");
+        }
+
+        private static string MaterialsRootPath(string fileName)
+        {
+            return CrystalCollectorGenerator.MaterialsRoot + "/" + fileName;
         }
 
         private static void RestoreScene(string previousScenePath, Scene openedScene)

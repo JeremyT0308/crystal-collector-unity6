@@ -12,6 +12,7 @@ namespace CrystalCollector
         private AudioClip clickClip;
         private AudioClip pickupClip;
         private AudioClip victoryClip;
+        private AudioClip pauseClip;
 
         private void Awake()
         {
@@ -20,11 +21,14 @@ namespace CrystalCollector
             clickClip = CreateTone("CrystalClick", 620f, 0.08f, 0.18f);
             pickupClip = CreateTone("CrystalPickup", 760f, 0.2f, 0.22f);
             victoryClip = CreateChord("CrystalVictory", new[] { 523.25f, 659.25f, 783.99f }, 0.65f, 0.26f);
+            pauseClip = CreateTone("CrystalPause", 310f, 0.12f, 0.16f);
         }
 
         public void PlayClick() => Play(clickClip);
         public void PlayPickup() => Play(pickupClip);
         public void PlayVictory() => Play(victoryClip);
+        public void PlayPause() => Play(pauseClip);
+        public void PlayResume() => Play(clickClip);
 
         private void Play(AudioClip clip)
         {

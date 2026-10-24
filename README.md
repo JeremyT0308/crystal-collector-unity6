@@ -10,6 +10,14 @@ The generated v2 build presents a neon sci-fi crystal nexus rather than a flat p
 
 All of that content remains reproducible: no external meshes, textures, audio, fonts, packages, or manually wired Inspector references are required.
 
+## V3 Environment & Asset Production Pass
+
+V3 evolves the arena into the **NEON CRYSTAL NEXUS FACILITY**. The generated MainGame scene now has a central Nexus landmark with a hero crystal, floating shards, energy rings, particles, animated lights, and a victory pulse, plus four readable sectors: North Reactor Core, East Research Lab, South Crystal Vault, and West Forge. Each sector contains exactly two gameplay crystals mounted on presentation-only pedestals; the South Vault also contains decorative formations that have no Script Machines or collection logic.
+
+The environment is built from reusable generator modules for floor panels, energy paths, tech pillars, wall modules, arches, sector signifiers, boundary architecture, decorative formations, and floating shard clusters. The V3 material library includes dark architecture, metal, accent, floor, crystal, pedestal, energy, and explorer-drone materials. The player remains a Rigidbody-driven C# movement controller, while the generated Visual Scripting graph remains the sole owner of crystal collection validity and score increments.
+
+V3 also adds an Editor-safe QUIT path, camera FOV/impulse polish, pedestal deactivation feedback, central Nexus victory reaction, an energy-explorer player silhouette with warm and cyan accents, and preserved procedural audio/post-processing. Generation remains deterministic and idempotent under `Assets/Generated`; no external assets, packages, or manual Inspector wiring are required.
+
 ## Game Description
 
 Explore a compact neon arena and collect all eight crystals. Obstacles create readable routes through the space, while the HUD tracks progress and elapsed time. When the last crystal is accepted by the Visual Scripting graph, the game presents a celebratory completion panel.
@@ -49,6 +57,7 @@ Explore a compact neon arena and collect all eight crystals. Obstacles create re
 - `GameFlowController.cs`: countdown, game states, timer, pause, restart, victory presentation, and scene transitions.
 - `GameHUD.cs` / `MenuController.cs` / `UIAnimator.cs`: UI presentation and animation.
 - `CollectiblePresentation.cs` / `WorldAnimator.cs` / `PlayerPresentation.cs`: visual-only motion and pickup feedback.
+- `PedestalPresentation.cs` / `NexusPresentation.cs`: visual-only collection deactivation and Nexus victory reaction.
 - `MenuCameraMotion.cs` / `UIButtonFX.cs`: subtle menu cinematics and reusable pointer/keyboard feedback.
 - `ProceduralAudio.cs`: optional generated tones created at runtime with `AudioClip.Create`.
 
@@ -131,6 +140,8 @@ Assets/Scripts/
 │   ├── UI/UIAnimator.cs
 │   ├── UI/UIButtonFX.cs
 │   ├── Presentation/CollectiblePresentation.cs
+│   ├── Presentation/PedestalPresentation.cs
+│   ├── Presentation/NexusPresentation.cs
 │   ├── Presentation/PlayerPresentation.cs
 │   ├── Presentation/WorldAnimator.cs
 │   └── Audio/ProceduralAudio.cs
@@ -157,6 +168,7 @@ Scenes/MainGame.unity
 Prefabs/Player.prefab
 Prefabs/Crystal.prefab
 Materials/*.mat
+Meshes/ and VFX/ generated support folders
 VolumeProfiles/CrystalCollectorGlobalProfile.asset
 VisualScripting/CollectCrystal.asset
 ```
@@ -169,7 +181,7 @@ VisualScripting/CollectCrystal.asset
 
 ## How to Validate
 
-Run `Tools > Crystal Collector > Validate Project`. The validator checks the Unity/package setup, generated scenes and prefabs, exact build order, Editor Play Mode Start Scene, eight trigger crystals, Script Machines and shared graph, self-collider graph wiring, EventSystem/InputSystemUIInputModule/GraphicRaycaster setup, transition overlay state, interactive panel assignments, generated materials, post-processing volume, camera/lighting, and the C# / Visual Scripting separation.
+Run `Tools > Crystal Collector > Validate Project`. The validator checks the Unity/package setup, generated scenes and prefabs, exact build order, Editor Play Mode Start Scene, eight trigger crystals, Script Machines and shared graph, self-collider graph wiring, named Nexus/sectors, pedestal mounting, V3 material library, EventSystem/InputSystemUIInputModule/GraphicRaycaster setup, transition overlay state, interactive panel assignments, generated materials, post-processing volume, camera/lighting, Editor-safe Quit, and the C# / Visual Scripting separation.
 
 For runtime validation from a closed Unity Editor, run the generated Editor method `CrystalCollector.EditorTools.CrystalCollectorRuntimeSmokeBatch.Run` in batch mode. The checked run passed: all eight real physics-trigger collections succeeded, duplicates stayed at one count, the crystal collider was disabled, the Player collider remained enabled, and Victory began after 8 / 8.
 

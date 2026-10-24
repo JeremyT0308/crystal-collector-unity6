@@ -30,9 +30,10 @@ namespace CrystalCollector.EditorTools
 
         private static readonly Vector3[] CrystalPositions =
         {
-            new Vector3(-6.5f, 0f, -6.2f), new Vector3(0f, 0f, -6.7f), new Vector3(6.5f, 0f, -5.4f),
-            new Vector3(-6.8f, 0f, 0.5f), new Vector3(6.4f, 0f, 1.2f),
-            new Vector3(-5.4f, 0f, 6.1f), new Vector3(0.4f, 0f, 6.7f), new Vector3(6.2f, 0f, 6.0f)
+            new Vector3(-2f, 0f, 6.6f), new Vector3(2f, 0f, 6.6f),
+            new Vector3(6.6f, 0f, -2f), new Vector3(6.6f, 0f, 2f),
+            new Vector3(-2f, 0f, -6.6f), new Vector3(2f, 0f, -6.6f),
+            new Vector3(-6.6f, 0f, -2f), new Vector3(-6.6f, 0f, 2f)
         };
 
         private static Material floorMaterial;
@@ -46,6 +47,15 @@ namespace CrystalCollector.EditorTools
         private static Material architectureMaterial;
         private static Material energyMaterial;
         private static Material particleMaterial;
+        private static Material floorPanelMaterial;
+        private static Material floorEmissionMaterial;
+        private static Material architectureDarkMaterial;
+        private static Material architectureAccentMaterial;
+        private static Material crystalCoreMaterial;
+        private static Material crystalShardMaterial;
+        private static Material pedestalMaterial;
+        private static Material playerDarkMaterial;
+        private static Material playerEnergyMaterial;
         private static VolumeProfile volumeProfile;
 
         [MenuItem("Tools/Crystal Collector/Generate Complete Game", priority = 1)]
@@ -129,20 +139,31 @@ namespace CrystalCollector.EditorTools
             GeneratorUtilities.EnsureFolder(MaterialsRoot);
             GeneratorUtilities.EnsureFolder(VolumeProfilesRoot);
             GeneratorUtilities.EnsureFolder(GeneratedRoot + "/VisualScripting");
+            GeneratorUtilities.EnsureFolder(GeneratedRoot + "/Meshes");
+            GeneratorUtilities.EnsureFolder(GeneratedRoot + "/VFX");
         }
 
         private static void CreateMaterials()
         {
-            floorMaterial = GeneratorUtilities.CreateMaterial(MaterialsRoot + "/Floor.mat", new Color(0.035f, 0.055f, 0.1f), 0.25f, 0.82f, new Color(0.02f, 0.07f, 0.16f), 0.5f);
-            wallMaterial = GeneratorUtilities.CreateMaterial(MaterialsRoot + "/Walls.mat", new Color(0.07f, 0.1f, 0.17f), 0.45f, 0.68f, new Color(0.05f, 0.08f, 0.16f), 0.6f);
-            obstacleMaterial = GeneratorUtilities.CreateMaterial(MaterialsRoot + "/Obstacles.mat", new Color(0.12f, 0.16f, 0.25f), 0.72f, 0.78f, new Color(0.05f, 0.16f, 0.28f), 0.7f);
-            crystalMaterial = GeneratorUtilities.CreateMaterial(MaterialsRoot + "/Crystal.mat", new Color(0.2f, 0.82f, 1f), 0.08f, 0.92f, new Color(0.05f, 0.78f, 1f), 3.2f);
-            crystalAccentMaterial = GeneratorUtilities.CreateMaterial(MaterialsRoot + "/CrystalAccent.mat", new Color(0.55f, 0.2f, 1f), 0.1f, 0.9f, new Color(0.46f, 0.1f, 1f), 3.8f);
-            playerMaterial = GeneratorUtilities.CreateMaterial(MaterialsRoot + "/Player.mat", new Color(0.98f, 0.58f, 0.22f), 0.18f, 0.86f, new Color(1f, 0.2f, 0.04f), 1.8f);
-            playerAccentMaterial = GeneratorUtilities.CreateMaterial(MaterialsRoot + "/PlayerAccent.mat", new Color(0.3f, 0.92f, 1f), 0.15f, 0.9f, new Color(0.1f, 0.7f, 1f), 2.2f);
-            ringMaterial = GeneratorUtilities.CreateMaterial(MaterialsRoot + "/GroundRing.mat", new Color(0.18f, 0.52f, 0.75f), 0.25f, 0.8f, new Color(0.05f, 0.45f, 0.9f), 2.6f);
-            architectureMaterial = GeneratorUtilities.CreateMaterial(MaterialsRoot + "/ArchitectureMetal.mat", new Color(0.035f, 0.075f, 0.14f), 0.82f, 0.9f, new Color(0.015f, 0.08f, 0.16f), 0.75f);
-            energyMaterial = GeneratorUtilities.CreateMaterial(MaterialsRoot + "/EnergyAccent.mat", new Color(0.05f, 0.42f, 0.65f), 0.15f, 0.82f, new Color(0.05f, 0.8f, 1f), 3.8f);
+            floorMaterial = GeneratorUtilities.CreateMaterial(MaterialsRoot + "/FloorBase.mat", new Color(0.025f, 0.04f, 0.075f), 0.32f, 0.86f, new Color(0.01f, 0.035f, 0.09f), 0.7f);
+            floorPanelMaterial = GeneratorUtilities.CreateMaterial(MaterialsRoot + "/FloorPanel.mat", new Color(0.055f, 0.09f, 0.16f), 0.58f, 0.82f, new Color(0.015f, 0.1f, 0.22f), 1.1f);
+            floorEmissionMaterial = GeneratorUtilities.CreateMaterial(MaterialsRoot + "/FloorEmission.mat", new Color(0.03f, 0.35f, 0.55f), 0.18f, 0.82f, new Color(0.02f, 0.8f, 1f), 3.3f);
+            architectureDarkMaterial = GeneratorUtilities.CreateMaterial(MaterialsRoot + "/ArchitectureDark.mat", new Color(0.035f, 0.06f, 0.115f), 0.78f, 0.9f, new Color(0.01f, 0.06f, 0.13f), 0.95f);
+            architectureMaterial = GeneratorUtilities.CreateMaterial(MaterialsRoot + "/ArchitectureMetal.mat", new Color(0.095f, 0.13f, 0.22f), 0.84f, 0.92f, new Color(0.02f, 0.12f, 0.2f), 0.8f);
+            architectureAccentMaterial = GeneratorUtilities.CreateMaterial(MaterialsRoot + "/ArchitectureAccent.mat", new Color(0.13f, 0.42f, 0.6f), 0.4f, 0.86f, new Color(0.03f, 0.7f, 1f), 2.5f);
+            wallMaterial = architectureDarkMaterial;
+            obstacleMaterial = architectureMaterial;
+            crystalCoreMaterial = GeneratorUtilities.CreateMaterial(MaterialsRoot + "/CrystalCore.mat", new Color(0.12f, 0.7f, 0.98f), 0.08f, 0.94f, new Color(0.03f, 0.72f, 1f), 4.2f);
+            crystalShardMaterial = GeneratorUtilities.CreateMaterial(MaterialsRoot + "/CrystalShard.mat", new Color(0.46f, 0.14f, 0.95f), 0.1f, 0.92f, new Color(0.45f, 0.08f, 1f), 4.4f);
+            crystalMaterial = crystalCoreMaterial;
+            crystalAccentMaterial = crystalShardMaterial;
+            pedestalMaterial = GeneratorUtilities.CreateMaterial(MaterialsRoot + "/Pedestal.mat", new Color(0.09f, 0.15f, 0.25f), 0.9f, 0.94f, new Color(0.02f, 0.1f, 0.2f), 0.85f);
+            playerMaterial = GeneratorUtilities.CreateMaterial(MaterialsRoot + "/PlayerBody.mat", new Color(0.96f, 0.44f, 0.16f), 0.22f, 0.88f, new Color(1f, 0.12f, 0.025f), 2.2f);
+            playerDarkMaterial = GeneratorUtilities.CreateMaterial(MaterialsRoot + "/PlayerDark.mat", new Color(0.04f, 0.055f, 0.09f), 0.82f, 0.9f, new Color(0.01f, 0.04f, 0.1f), 0.6f);
+            playerEnergyMaterial = GeneratorUtilities.CreateMaterial(MaterialsRoot + "/PlayerEnergy.mat", new Color(0.2f, 0.92f, 1f), 0.12f, 0.92f, new Color(0.05f, 0.8f, 1f), 3.4f);
+            playerAccentMaterial = playerEnergyMaterial;
+            ringMaterial = GeneratorUtilities.CreateMaterial(MaterialsRoot + "/EnergyRing.mat", new Color(0.12f, 0.55f, 0.8f), 0.28f, 0.84f, new Color(0.03f, 0.65f, 1f), 3.8f);
+            energyMaterial = GeneratorUtilities.CreateMaterial(MaterialsRoot + "/EnergyAccent.mat", new Color(0.04f, 0.46f, 0.68f), 0.16f, 0.84f, new Color(0.05f, 0.9f, 1f), 4.2f);
             var particleShader = Shader.Find("Universal Render Pipeline/Particles/Unlit") ?? Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Standard");
             particleMaterial = new Material(particleShader) { name = "GeneratedParticles" };
             if (particleMaterial.HasProperty("_BaseColor")) particleMaterial.SetColor("_BaseColor", new Color(0.15f, 0.78f, 1f, 0.9f));
@@ -155,13 +176,14 @@ namespace CrystalCollector.EditorTools
         {
             var root = new GameObject("Player");
             root.tag = "Player";
-            var body = GeneratorUtilities.CreatePrimitive(PrimitiveType.Capsule, "Body", root.transform, new Vector3(0f, 0.95f, 0f), new Vector3(0.9f, 0.95f, 0.9f), playerMaterial);
-            var core = GeneratorUtilities.CreatePrimitive(PrimitiveType.Sphere, "HeadOrCore", root.transform, new Vector3(0f, 1.95f, 0.05f), new Vector3(0.5f, 0.5f, 0.5f), playerAccentMaterial);
-            var indicator = GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "DirectionIndicator", root.transform, new Vector3(0f, 1.05f, 0.5f), new Vector3(0.16f, 0.12f, 0.5f), playerAccentMaterial);
+            var body = GeneratorUtilities.CreatePrimitive(PrimitiveType.Capsule, "Body", root.transform, new Vector3(0f, 0.95f, 0f), new Vector3(0.9f, 0.95f, 0.9f), playerDarkMaterial);
+            GeneratorUtilities.CreatePrimitive(PrimitiveType.Capsule, "WarmAccentShell", root.transform, new Vector3(0f, 1.03f, 0f), new Vector3(0.72f, 0.65f, 0.72f), playerMaterial);
+            var core = GeneratorUtilities.CreatePrimitive(PrimitiveType.Sphere, "HeadOrCore", root.transform, new Vector3(0f, 1.95f, 0.05f), new Vector3(0.5f, 0.5f, 0.5f), playerEnergyMaterial);
+            var indicator = GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "DirectionIndicator", root.transform, new Vector3(0f, 1.05f, 0.5f), new Vector3(0.16f, 0.12f, 0.5f), playerEnergyMaterial);
             var marker = GeneratorUtilities.CreatePrimitive(PrimitiveType.Cylinder, "GroundMarker", root.transform, new Vector3(0f, 0.04f, 0f), new Vector3(0.82f, 0.015f, 0.82f), ringMaterial);
-            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cylinder, "HoverRing", root.transform, new Vector3(0f, 0.3f, 0f), new Vector3(0.62f, 0.025f, 0.62f), energyMaterial);
-            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "SideModuleLeft", root.transform, new Vector3(-0.58f, 1.1f, 0f), new Vector3(0.16f, 0.34f, 0.48f), playerAccentMaterial);
-            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "SideModuleRight", root.transform, new Vector3(0.58f, 1.1f, 0f), new Vector3(0.16f, 0.34f, 0.48f), playerAccentMaterial);
+            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cylinder, "HoverRing", root.transform, new Vector3(0f, 0.3f, 0f), new Vector3(0.62f, 0.025f, 0.62f), playerEnergyMaterial).AddComponent<WorldAnimator>();
+            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "SideModuleLeft", root.transform, new Vector3(-0.58f, 1.1f, 0f), new Vector3(0.16f, 0.34f, 0.48f), playerEnergyMaterial);
+            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "SideModuleRight", root.transform, new Vector3(0.58f, 1.1f, 0f), new Vector3(0.16f, 0.34f, 0.48f), playerEnergyMaterial);
             var trailObject = new GameObject("Trail");
             trailObject.transform.SetParent(root.transform, false);
             trailObject.transform.localPosition = new Vector3(0f, 0.35f, -0.35f);
@@ -186,6 +208,8 @@ namespace CrystalCollector.EditorTools
             var presentation = root.AddComponent<PlayerPresentation>();
             presentation.Configure(movement, body.transform, core.transform);
             AddParticleSystem(root.transform, "ThrusterParticles", new Color(0.18f, 0.8f, 1f), true, 5f);
+            AddParticleSystem(root.transform, "ThrusterLeft", new Color(0.55f, 0.18f, 1f), true, 3f).transform.localPosition = new Vector3(-0.36f, 0.35f, -0.28f);
+            AddParticleSystem(root.transform, "ThrusterRight", new Color(0.55f, 0.18f, 1f), true, 3f).transform.localPosition = new Vector3(0.36f, 0.35f, -0.28f);
 
             var prefab = PrefabUtility.SaveAsPrefabAsset(root, PlayerPrefabPath);
             Object.DestroyImmediate(root);
@@ -229,6 +253,9 @@ namespace CrystalCollector.EditorTools
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             var world = new GameObject("MenuWorld");
             GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "Platform", world.transform, new Vector3(0f, -0.55f, 0f), new Vector3(22f, 0.5f, 22f), floorMaterial, true);
+            CreateTechPillar(world.transform, "MenuTowerLeft", new Vector3(-7.2f, 0f, 4.6f), new Vector3(0.55f, 2.5f, 0.55f), architectureAccentMaterial);
+            CreateTechPillar(world.transform, "MenuTowerRight", new Vector3(7.2f, 0f, 4.6f), new Vector3(0.55f, 2.9f, 0.55f), crystalShardMaterial);
+            CreateEnergyArch(world.transform, "MenuEnergyArch", new Vector3(0f, 0f, 6.5f), energyMaterial);
             var showcase = new GameObject("ShowcaseCrystal");
             showcase.transform.SetParent(world.transform, false);
             showcase.transform.localPosition = new Vector3(0f, 1.1f, 0.2f);
@@ -264,7 +291,7 @@ namespace CrystalCollector.EditorTools
             var title = GeneratorUtilities.CreateText("Title", content.transform, "CRYSTAL\nCOLLECTOR", 72, Color.white, TextAnchor.MiddleCenter, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 220f), new Vector2(900f, 240f));
             title.fontStyle = FontStyle.Bold;
             title.color = new Color(0.85f, 0.96f, 1f);
-            var subtitle = GeneratorUtilities.CreateText("Subtitle", content.transform, "A luminous hunt through the midnight arena", 24, new Color(0.66f, 0.78f, 0.9f), TextAnchor.MiddleCenter, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 95f), new Vector2(820f, 60f));
+            var subtitle = GeneratorUtilities.CreateText("Subtitle", content.transform, "NEXUS RECOVERY PROTOCOL  •  SYSTEM READY", 24, new Color(0.66f, 0.78f, 0.9f), TextAnchor.MiddleCenter, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 95f), new Vector2(820f, 60f));
             subtitle.fontStyle = FontStyle.Italic;
             var playButton = GeneratorUtilities.CreateButton("PlayButton", content.transform, "PLAY", new Vector2(0f, -35f), new Vector2(320f, 68f), new Color(0.1f, 0.82f, 1f));
             var howButton = GeneratorUtilities.CreateButton("HowToPlayButton", content.transform, "HOW TO PLAY", new Vector2(0f, -120f), new Vector2(320f, 68f), new Color(0.55f, 0.3f, 1f));
@@ -299,40 +326,68 @@ namespace CrystalCollector.EditorTools
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             var world = new GameObject("Arena");
-            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "Floor", world.transform, new Vector3(0f, -0.35f, 0f), new Vector3(19f, 0.7f, 19f), floorMaterial, true);
-            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "NorthBoundary", world.transform, new Vector3(0f, 0.7f, 9.2f), new Vector3(19f, 1.8f, 0.55f), wallMaterial, true);
-            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "SouthBoundary", world.transform, new Vector3(0f, 0.7f, -9.2f), new Vector3(19f, 1.8f, 0.55f), wallMaterial, true);
-            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "EastBoundary", world.transform, new Vector3(9.2f, 0.7f, 0f), new Vector3(0.55f, 1.8f, 19f), wallMaterial, true);
-            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "WestBoundary", world.transform, new Vector3(-9.2f, 0.7f, 0f), new Vector3(0.55f, 1.8f, 19f), wallMaterial, true);
-            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cylinder, "CentralNexus", world.transform, new Vector3(0f, 0.08f, 0f), new Vector3(3.1f, 0.08f, 3.1f), architectureMaterial);
-            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cylinder, "CentralEnergyRing", world.transform, new Vector3(0f, 0.2f, 0f), new Vector3(2.55f, 0.018f, 2.55f), energyMaterial).AddComponent<WorldAnimator>();
-            var sectorPositions = new[] { new Vector3(-6.5f, 0.05f, -6.2f), new Vector3(6.5f, 0.05f, -5.4f), new Vector3(-5.4f, 0.05f, 6.1f), new Vector3(6.2f, 0.05f, 6f) };
-            for (var i = 0; i < sectorPositions.Length; i++)
+            var environmentRoot = new GameObject("EnvironmentRoot").transform;
+            environmentRoot.SetParent(world.transform, false);
+            var floorRoot = new GameObject("FloorSystem").transform;
+            floorRoot.SetParent(environmentRoot, false);
+            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "BaseFloor", floorRoot, new Vector3(0f, -0.35f, 0f), new Vector3(19f, 0.7f, 19f), floorMaterial, true);
+            for (var i = -4; i <= 4; i++)
             {
-                GeneratorUtilities.CreatePrimitive(PrimitiveType.Cylinder, "SectorPlatform_" + (i + 1), world.transform, sectorPositions[i], new Vector3(2.1f, 0.07f, 2.1f), architectureMaterial);
-                GeneratorUtilities.CreatePrimitive(PrimitiveType.Cylinder, "SectorAccent_" + (i + 1), world.transform, sectorPositions[i] + Vector3.up * 0.11f, new Vector3(1.7f, 0.015f, 1.7f), energyMaterial);
+                CreateFloorPanel(floorRoot, "NorthSouthPanel_" + i, new Vector3(i * 2f, 0.012f, 0f), new Vector3(1.7f, 0.025f, 17.5f), i % 2 == 0 ? floorPanelMaterial : floorEmissionMaterial);
+                CreateFloorPanel(floorRoot, "EastWestPanel_" + i, new Vector3(0f, 0.014f, i * 2f), new Vector3(17.5f, 0.025f, 1.7f), i % 2 == 0 ? floorPanelMaterial : floorEmissionMaterial);
             }
+            CreateBoundaryArchitecture(environmentRoot);
 
-            var obstaclePositions = new[]
-            {
-                new Vector3(-3.2f, 0.6f, -2.4f), new Vector3(3.5f, 0.6f, -2.3f), new Vector3(-2.5f, 0.6f, 3.0f), new Vector3(3.0f, 0.6f, 3.3f),
-                new Vector3(0f, 0.9f, -4.2f), new Vector3(0f, 0.9f, 4.4f)
-            };
-            for (var i = 0; i < obstaclePositions.Length; i++)
-            {
-                var obstacle = GeneratorUtilities.CreatePrimitive(i % 2 == 0 ? PrimitiveType.Cube : PrimitiveType.Cylinder, "Obstacle_" + (i + 1), world.transform, obstaclePositions[i], i % 2 == 0 ? new Vector3(1.25f, 1.2f, 1.25f) : new Vector3(1f, 1.8f, 1f), obstacleMaterial, true);
-                obstacle.transform.localRotation = Quaternion.Euler(0f, i * 17f, 0f);
-            }
+            var pathRoot = new GameObject("NexusPaths").transform;
+            pathRoot.SetParent(environmentRoot, false);
+            CreateFloorPanel(pathRoot, "NorthPath", new Vector3(0f, 0.04f, 4.4f), new Vector3(2.25f, 0.035f, 5.1f), floorEmissionMaterial);
+            CreateFloorPanel(pathRoot, "SouthPath", new Vector3(0f, 0.04f, -4.4f), new Vector3(2.25f, 0.035f, 5.1f), floorEmissionMaterial);
+            CreateFloorPanel(pathRoot, "EastPath", new Vector3(4.4f, 0.04f, 0f), new Vector3(5.1f, 0.035f, 2.25f), floorEmissionMaterial);
+            CreateFloorPanel(pathRoot, "WestPath", new Vector3(-4.4f, 0.04f, 0f), new Vector3(5.1f, 0.035f, 2.25f), floorEmissionMaterial);
 
-            for (var i = 0; i < 6; i++)
-            {
-                var column = GeneratorUtilities.CreatePrimitive(PrimitiveType.Cylinder, "AccentColumn_" + (i + 1), world.transform, new Vector3(-7.6f + (i % 3) * 7.6f, 0.8f, i < 3 ? 7.5f : -7.5f), new Vector3(0.18f, 0.8f, 0.18f), crystalAccentMaterial);
-                column.AddComponent<WorldAnimator>();
-            }
+            var nexus = new GameObject("CentralNexus");
+            nexus.transform.SetParent(environmentRoot, false);
+            var nexusRings = new List<Transform>();
+            var nexusParticles = new List<ParticleSystem>();
+            var nexusLights = new List<Light>();
+            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cylinder, "NexusPlatform", nexus.transform, new Vector3(0f, 0.08f, 0f), new Vector3(3.2f, 0.08f, 3.2f), architectureDarkMaterial);
+            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cylinder, "NexusMetalDeck", nexus.transform, new Vector3(0f, 0.22f, 0f), new Vector3(2.7f, 0.08f, 2.7f), architectureMaterial);
+            nexusRings.Add(CreateEnergyRing(nexus.transform, "NexusEnergyRing", new Vector3(0f, 0.34f, 0f), 2.4f, energyMaterial));
+            nexusRings.Add(CreateEnergyRing(nexus.transform, "NexusOuterRing", new Vector3(0f, 0.16f, 0f), 3.1f, architectureAccentMaterial));
+            var hero = new GameObject("NexusHeroCrystal");
+            hero.transform.SetParent(nexus.transform, false);
+            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "HeroCore", hero.transform, new Vector3(0f, 1.35f, 0f), new Vector3(0.8f, 2.4f, 0.8f), crystalCoreMaterial).transform.localRotation = Quaternion.Euler(0f, 0f, 28f);
+            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "HeroShardA", hero.transform, new Vector3(-0.72f, 1.2f, 0.05f), new Vector3(0.2f, 1.55f, 0.2f), crystalShardMaterial).transform.localRotation = Quaternion.Euler(0f, 0f, -38f);
+            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "HeroShardB", hero.transform, new Vector3(0.72f, 1.6f, 0.04f), new Vector3(0.18f, 1.8f, 0.18f), crystalCoreMaterial).transform.localRotation = Quaternion.Euler(0f, 0f, 38f);
+            hero.AddComponent<WorldAnimator>();
+            nexusParticles.Add(AddParticleSystem(nexus.transform, "NexusEnergyParticles", new Color(0.18f, 0.82f, 1f), true, 12f));
+            nexusParticles.Add(AddParticleSystem(nexus.transform, "NexusShardParticles", new Color(0.55f, 0.18f, 1f), true, 5f));
+            for (var i = 0; i < 6; i++) CreateFloatingShardCluster(nexus.transform, "NexusFloatingShard_" + i, new Vector3(Mathf.Cos(i * 1.047f) * 2.1f, 1.8f + (i % 2) * 0.35f, Mathf.Sin(i * 1.047f) * 2.1f), i % 2 == 0 ? crystalShardMaterial : crystalCoreMaterial);
+            nexusLights.Add(AddPointLight(nexus.transform, new Vector3(0f, 1.1f, 0f), new Color(0.08f, 0.65f, 1f), 10f, 12f));
+            nexusLights.Add(AddPointLight(nexus.transform, new Vector3(0f, 2.2f, 0f), new Color(0.55f, 0.12f, 1f), 5f, 8f));
+            var nexusPresentation = nexus.AddComponent<NexusPresentation>();
+            nexusPresentation.Configure(nexusRings.ToArray(), nexusParticles.ToArray(), nexusLights.ToArray());
 
-            AddDirectionalLight(world.transform, new Vector3(48f, -34f, 24f), new Color(0.6f, 0.75f, 1f), 1.3f);
-            AddPointLight(world.transform, new Vector3(-5f, 3.5f, -5f), new Color(0.1f, 0.55f, 1f), 7f, 9f);
-            AddPointLight(world.transform, new Vector3(5f, 3.5f, 5f), new Color(0.5f, 0.12f, 1f), 7f, 9f);
+            var north = CreateSector(environmentRoot, "North_ReactorCore", new Vector3(0f, 0f, 6.6f), "REACTOR CORE", new Color(0.05f, 0.78f, 1f));
+            var east = CreateSector(environmentRoot, "East_ResearchLab", new Vector3(6.6f, 0f, 0f), "RESEARCH LAB", new Color(0.5f, 0.2f, 1f));
+            var south = CreateSector(environmentRoot, "South_CrystalVault", new Vector3(0f, 0f, -6.6f), "CRYSTAL VAULT", new Color(0.15f, 0.92f, 0.85f));
+            var west = CreateSector(environmentRoot, "West_Forge", new Vector3(-6.6f, 0f, 0f), "FORGE", new Color(1f, 0.28f, 0.12f));
+            CreateTechPillar(north, "ReactorPillarA", new Vector3(-1.55f, 0f, 0.9f), new Vector3(0.65f, 2.4f, 0.65f), architectureAccentMaterial);
+            CreateTechPillar(north, "ReactorPillarB", new Vector3(1.55f, 0f, 0.9f), new Vector3(0.65f, 2.4f, 0.65f), architectureAccentMaterial);
+            CreateEnergyArch(north, "ReactorArch", new Vector3(0f, 0f, 1.35f), architectureAccentMaterial);
+            CreateTechPillar(east, "LabColumnA", new Vector3(-1.4f, 0f, -0.9f), new Vector3(0.5f, 1.8f, 0.5f), crystalShardMaterial);
+            CreateTechPillar(east, "LabColumnB", new Vector3(1.4f, 0f, -0.9f), new Vector3(0.5f, 1.8f, 0.5f), crystalShardMaterial);
+            CreateWallModule(east, "LabConsole", new Vector3(0f, 0.7f, 1.35f), new Vector3(2.4f, 1.2f, 0.35f), architectureAccentMaterial);
+            CreateEnergyArch(south, "VaultArch", new Vector3(0f, 0f, 1.2f), energyMaterial);
+            CreateDecorativeCrystalFormation(south, "VaultFormationA", new Vector3(-1.55f, 0f, 1.05f), crystalShardMaterial);
+            CreateDecorativeCrystalFormation(south, "VaultFormationB", new Vector3(1.55f, 0f, 1.05f), crystalCoreMaterial);
+            CreateTechPillar(west, "ForgeTowerA", new Vector3(-1.55f, 0f, 1f), new Vector3(0.8f, 2.7f, 0.8f), architectureAccentMaterial);
+            CreateTechPillar(west, "ForgeTowerB", new Vector3(1.55f, 0f, 1f), new Vector3(0.8f, 2.1f, 0.8f), architectureAccentMaterial);
+            CreateWallModule(west, "ForgeKiln", new Vector3(0f, 0.8f, 1.25f), new Vector3(2.6f, 1.4f, 0.45f), architectureAccentMaterial);
+
+            AddDirectionalLight(world.transform, new Vector3(48f, -34f, 24f), new Color(0.6f, 0.75f, 1f), 1.25f);
+            AddPointLight(world.transform, new Vector3(-6f, 3.5f, -5f), new Color(0.08f, 0.55f, 1f), 7f, 9f);
+            AddPointLight(world.transform, new Vector3(6f, 3.5f, 5f), new Color(0.55f, 0.12f, 1f), 7f, 9f);
             CreateGlobalVolume(world.transform);
 
             var variablesObject = new GameObject("Scene Variables");
@@ -343,12 +398,18 @@ namespace CrystalCollector.EditorTools
             var player = PrefabUtility.InstantiatePrefab(playerPrefab) as GameObject;
             player.name = "Player";
             player.transform.position = new Vector3(0f, 0f, 0f);
-            for (var i = 0; i < CrystalPositions.Length; i++)
+            var sectorRoots = new[] { north, east, south, west };
+            var localCrystalPositions = new[] { new Vector3(-2f, 0f, 0f), new Vector3(2f, 0f, 0f), new Vector3(0f, 0f, -2f), new Vector3(0f, 0f, 2f) };
+            for (var sectorIndex = 0; sectorIndex < sectorRoots.Length; sectorIndex++)
             {
-                var crystal = PrefabUtility.InstantiatePrefab(crystalPrefab) as GameObject;
-                crystal.name = $"Crystal_{i + 1:00}";
-                crystal.transform.position = CrystalPositions[i];
-                crystal.transform.SetParent(world.transform, true);
+                for (var crystalIndex = 0; crystalIndex < 2; crystalIndex++)
+                {
+                    var pedestal = CreateCrystalPedestal(sectorRoots[sectorIndex], $"CrystalPedestal_{sectorIndex + 1:00}_{crystalIndex + 1:00}", localCrystalPositions[sectorIndex == 0 ? crystalIndex : sectorIndex == 1 ? crystalIndex + 2 : sectorIndex == 2 ? crystalIndex : crystalIndex + 2]);
+                    var crystal = PrefabUtility.InstantiatePrefab(crystalPrefab) as GameObject;
+                    crystal.name = $"Crystal_{sectorIndex * 2 + crystalIndex + 1:00}";
+                    crystal.transform.SetParent(pedestal.transform, false);
+                    crystal.transform.localPosition = new Vector3(0f, 0.18f, 0f);
+                }
             }
 
             var cameraObject = new GameObject("Main Camera", typeof(Camera), typeof(AudioListener), typeof(CameraFollow));
@@ -415,6 +476,8 @@ namespace CrystalCollector.EditorTools
             flow.hud = gameHud;
             flow.transition = transition;
             flow.audio = audio;
+            flow.nexus = nexusPresentation;
+            flow.cameraFollow = cameraFollow;
             gameHud.crystalCountText = crystalCount;
             gameHud.crystalIndicators = indicators;
             gameHud.timerText = timer;
@@ -437,6 +500,130 @@ namespace CrystalCollector.EditorTools
             gameHud.victoryMenuButton = victoryMenuButton;
 
             EditorSceneManager.SaveScene(scene, MainGameScenePath);
+        }
+
+        private static Transform CreateSector(Transform parent, string name, Vector3 position, string label, Color accent)
+        {
+            var sector = new GameObject(name);
+            sector.transform.SetParent(parent, false);
+            sector.transform.localPosition = position;
+            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cylinder, "SectorPlatform", sector.transform, new Vector3(0f, 0.06f, 0f), new Vector3(2.65f, 0.06f, 2.65f), architectureDarkMaterial);
+            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cylinder, "SectorDeck", sector.transform, new Vector3(0f, 0.18f, 0f), new Vector3(2.28f, 0.05f, 2.28f), architectureMaterial);
+            var ring = GeneratorUtilities.CreatePrimitive(PrimitiveType.Cylinder, "SectorEnergyRing", sector.transform, new Vector3(0f, 0.28f, 0f), new Vector3(2.18f, 0.018f, 2.18f), energyMaterial);
+            ring.AddComponent<WorldAnimator>();
+            CreateSectorSignifier(sector.transform, label, accent);
+            return sector.transform;
+        }
+
+        private static GameObject CreateCrystalPedestal(Transform parent, string name, Vector3 localPosition)
+        {
+            var pedestal = new GameObject(name);
+            pedestal.transform.SetParent(parent, false);
+            pedestal.transform.localPosition = localPosition;
+            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cylinder, "PedestalBase", pedestal.transform, new Vector3(0f, 0.23f, 0f), new Vector3(0.95f, 0.23f, 0.95f), pedestalMaterial);
+            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cylinder, "PedestalUpper", pedestal.transform, new Vector3(0f, 0.55f, 0f), new Vector3(0.68f, 0.1f, 0.68f), architectureAccentMaterial);
+            var ring = GeneratorUtilities.CreatePrimitive(PrimitiveType.Cylinder, "PedestalEnergyRing", pedestal.transform, new Vector3(0f, 0.68f, 0f), new Vector3(0.82f, 0.016f, 0.82f), energyMaterial);
+            ring.AddComponent<WorldAnimator>();
+            var lightObject = new GameObject("PedestalLight", typeof(Light));
+            lightObject.transform.SetParent(pedestal.transform, false);
+            lightObject.transform.localPosition = new Vector3(0f, 0.8f, 0f);
+            var light = lightObject.GetComponent<Light>();
+            light.type = LightType.Point;
+            light.color = new Color(0.12f, 0.75f, 1f);
+            light.intensity = 2.5f;
+            light.range = 3.5f;
+            var presentation = pedestal.AddComponent<PedestalPresentation>();
+            presentation.Configure(new[] { ring.GetComponent<Renderer>() }, new[] { light });
+            return pedestal;
+        }
+
+        private static Transform CreateEnergyRing(Transform parent, string name, Vector3 localPosition, float radius, Material material)
+        {
+            var ring = GeneratorUtilities.CreatePrimitive(PrimitiveType.Cylinder, name, parent, localPosition, new Vector3(radius, 0.018f, radius), material);
+            ring.AddComponent<WorldAnimator>();
+            return ring.transform;
+        }
+
+        private static void CreateTechPillar(Transform parent, string name, Vector3 localPosition, Vector3 scale, Material accent)
+        {
+            var pillar = new GameObject(name);
+            pillar.transform.SetParent(parent, false);
+            pillar.transform.localPosition = localPosition;
+            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "DarkBody", pillar.transform, new Vector3(0f, scale.y, 0f), scale, architectureDarkMaterial);
+            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "MetalCap", pillar.transform, new Vector3(0f, scale.y * 2f + 0.08f, 0f), new Vector3(scale.x * 1.18f, 0.16f, scale.z * 1.18f), architectureMaterial);
+            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "EnergySpine", pillar.transform, new Vector3(0f, scale.y, scale.z * 0.52f), new Vector3(scale.x * 0.24f, scale.y * 1.4f, scale.z * 0.08f), accent);
+        }
+
+        private static void CreateWallModule(Transform parent, string name, Vector3 localPosition, Vector3 scale, Material accent)
+        {
+            var wall = GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, name, parent, localPosition, scale, architectureDarkMaterial);
+            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "WallAccent", wall.transform, new Vector3(0f, 0.02f, -0.52f), new Vector3(scale.x * 0.75f, scale.y * 0.08f, 0.06f), accent);
+        }
+
+        private static void CreateEnergyArch(Transform parent, string name, Vector3 localPosition, Material accent)
+        {
+            var arch = new GameObject(name);
+            arch.transform.SetParent(parent, false);
+            arch.transform.localPosition = localPosition;
+            CreateTechPillar(arch.transform, "ArchLeft", new Vector3(-1.35f, 0f, 0f), new Vector3(0.34f, 1.35f, 0.34f), accent);
+            CreateTechPillar(arch.transform, "ArchRight", new Vector3(1.35f, 0f, 0f), new Vector3(0.34f, 1.35f, 0.34f), accent);
+            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "ArchHeader", arch.transform, new Vector3(0f, 2.85f, 0f), new Vector3(3.05f, 0.32f, 0.36f), architectureMaterial);
+            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "ArchEnergy", arch.transform, new Vector3(0f, 2.85f, -0.21f), new Vector3(2.35f, 0.08f, 0.08f), accent);
+        }
+
+        private static void CreateFloorPanel(Transform parent, string name, Vector3 localPosition, Vector3 scale, Material material)
+        {
+            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, name, parent, localPosition, scale, material);
+        }
+
+        private static void CreateSectorSignifier(Transform parent, string label, Color accent)
+        {
+            var sign = new GameObject("SectorSignifier_" + label.Replace(" ", "_"));
+            sign.transform.SetParent(parent, false);
+            sign.transform.localPosition = new Vector3(0f, 0.16f, 2.05f);
+            var plate = GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "SignPlate", sign.transform, Vector3.zero, new Vector3(2.35f, 0.06f, 0.18f), architectureDarkMaterial);
+            plate.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
+            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "SignGlow", sign.transform, new Vector3(0f, 0.04f, -0.1f), new Vector3(1.75f, 0.025f, 0.04f), energyMaterial);
+        }
+
+        private static void CreateFloatingShardCluster(Transform parent, string name, Vector3 localPosition, Material material)
+        {
+            var cluster = new GameObject(name);
+            cluster.transform.SetParent(parent, false);
+            cluster.transform.localPosition = localPosition;
+            var a = GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "ShardA", cluster.transform, new Vector3(0f, 0f, 0f), new Vector3(0.14f, 0.62f, 0.14f), material);
+            a.transform.localRotation = Quaternion.Euler(0f, 0f, 28f);
+            var b = GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "ShardB", cluster.transform, new Vector3(0.25f, 0.18f, 0.05f), new Vector3(0.1f, 0.42f, 0.1f), crystalCoreMaterial);
+            b.transform.localRotation = Quaternion.Euler(0f, 0f, -38f);
+            cluster.AddComponent<WorldAnimator>();
+        }
+
+        private static void CreateDecorativeCrystalFormation(Transform parent, string name, Vector3 localPosition, Material material)
+        {
+            var formation = new GameObject(name);
+            formation.transform.SetParent(parent, false);
+            formation.transform.localPosition = localPosition;
+            var core = GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "DecorativeCore", formation.transform, new Vector3(0f, 0.85f, 0f), new Vector3(0.34f, 1.25f, 0.34f), material);
+            core.transform.localRotation = Quaternion.Euler(0f, 0f, 24f);
+            var side = GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "DecorativeShard", formation.transform, new Vector3(0.42f, 0.55f, 0.02f), new Vector3(0.16f, 0.75f, 0.16f), crystalCoreMaterial);
+            side.transform.localRotation = Quaternion.Euler(0f, 0f, -38f);
+            formation.AddComponent<WorldAnimator>();
+        }
+
+        private static void CreateBoundaryArchitecture(Transform parent)
+        {
+            var boundary = new GameObject("BoundaryArchitecture");
+            boundary.transform.SetParent(parent, false);
+            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "NorthBoundary", boundary.transform, new Vector3(0f, 0.7f, 9.2f), new Vector3(19f, 1.8f, 0.55f), architectureDarkMaterial, true);
+            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "SouthBoundary", boundary.transform, new Vector3(0f, 0.7f, -9.2f), new Vector3(19f, 1.8f, 0.55f), architectureDarkMaterial, true);
+            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "EastBoundary", boundary.transform, new Vector3(9.2f, 0.7f, 0f), new Vector3(0.55f, 1.8f, 19f), architectureDarkMaterial, true);
+            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "WestBoundary", boundary.transform, new Vector3(-9.2f, 0.7f, 0f), new Vector3(0.55f, 1.8f, 19f), architectureDarkMaterial, true);
+            for (var i = 0; i < 8; i++)
+            {
+                var angle = i * 45f * Mathf.Deg2Rad;
+                var post = GeneratorUtilities.CreatePrimitive(PrimitiveType.Cylinder, "BoundaryPost_" + i, boundary.transform, new Vector3(Mathf.Cos(angle) * 8.45f, 1.25f, Mathf.Sin(angle) * 8.45f), new Vector3(0.18f, 1.25f, 0.18f), architectureAccentMaterial);
+                post.AddComponent<WorldAnimator>();
+            }
         }
 
         private static SceneTransition AddTransition(Transform canvas)
@@ -502,7 +689,7 @@ namespace CrystalCollector.EditorTools
 
         private static ParticleSystem AddParticleSystem(Transform parent, string name, Color color, bool loop, float emissionRate)
         {
-            var particleObject = new GameObject(name, typeof(ParticleSystem), typeof(ParticleSystemRenderer));
+            var particleObject = new GameObject(name, typeof(ParticleSystem));
             particleObject.transform.SetParent(parent, false);
             var system = particleObject.GetComponent<ParticleSystem>();
             var main = system.main;
@@ -537,7 +724,7 @@ namespace CrystalCollector.EditorTools
             light.shadows = LightShadows.Soft;
         }
 
-        private static void AddPointLight(Transform parent, Vector3 position, Color color, float intensity, float range)
+        private static Light AddPointLight(Transform parent, Vector3 position, Color color, float intensity, float range)
         {
             var lightObject = new GameObject("Accent Point Light", typeof(Light));
             lightObject.transform.SetParent(parent, false);
@@ -548,6 +735,7 @@ namespace CrystalCollector.EditorTools
             light.intensity = intensity;
             light.range = range;
             light.shadows = LightShadows.None;
+            return light;
         }
 
         private static void ConfigureBuildSettings()

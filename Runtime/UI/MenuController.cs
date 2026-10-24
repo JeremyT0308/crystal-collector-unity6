@@ -74,7 +74,11 @@ namespace CrystalCollector
         {
             audio?.PlayClick();
             Debug.Log("Crystal Collector quit requested.");
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
             Application.Quit();
+#endif
         }
 
         private IEnumerator AnimateHowToPlay(bool visible)

@@ -24,6 +24,8 @@ namespace CrystalCollector
         public GameHUD hud;
         public SceneTransition transition;
         public new ProceduralAudio audio;
+        public NexusPresentation nexus;
+        public CameraFollow cameraFollow;
         public int totalCrystals = 8;
 
         public GameState State { get; private set; }
@@ -85,6 +87,7 @@ namespace CrystalCollector
         {
             if (State != GameState.Playing) return;
             crystal?.GetComponent<CollectiblePresentation>()?.PlayPickupFeedback();
+            cameraFollow?.Impulse(0.08f);
             hud?.SetCrystalCount(newCount, totalCrystals);
             hud?.ShowPickupMessage();
             audio?.PlayPickup();
@@ -97,6 +100,8 @@ namespace CrystalCollector
             player?.SetInputEnabled(false);
             hud?.ShowVictory(totalCrystals, ElapsedTime);
             audio?.PlayVictory();
+            nexus?.PlayVictoryReaction();
+            cameraFollow?.Impulse(0.18f);
         }
 
         public void TogglePause()
@@ -113,6 +118,7 @@ namespace CrystalCollector
             Time.timeScale = 0f;
             player?.SetInputEnabled(false);
             hud?.ShowPause();
+            audio?.PlayPause();
         }
 
         public void Resume()
@@ -122,6 +128,7 @@ namespace CrystalCollector
             State = GameState.Playing;
             player?.SetInputEnabled(true);
             hud?.HidePause();
+            audio?.PlayResume();
         }
 
         public void Restart()
