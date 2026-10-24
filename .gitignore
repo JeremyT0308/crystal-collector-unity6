@@ -1,0 +1,12 @@
+# The scripts repository intentionally excludes Unity-generated game content.
+Generated/
+Library/
+Temp/
+Logs/
+Obj/
+UserSettings/
+*.csproj
+*.sln
+*.slnx
+*.userprefs
+
