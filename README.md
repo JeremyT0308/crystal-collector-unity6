@@ -4,6 +4,12 @@
 
 Crystal Collector demonstrates a clear separation between traditional C# scripting and Unity Visual Scripting in a small playable 3D game. C# owns movement, camera, game flow, UI, and presentation. Visual Scripting owns the actual crystal collection decision.
 
+## v2 Production Overhaul
+
+The generated v2 build presents a neon sci-fi crystal nexus rather than a flat prototype arena. It includes a cinematic drifting menu camera, layered hero crystal, procedural arena platforms and energy rings, generated URP materials, global Bloom/ACES/Vignette post-processing, animated primitives, particle systems, procedural UI tones, button hover feedback, an eight-crystal HUD indicator strip, READY/GO sequencing, hardened pause/victory panels, and deterministic scene transitions.
+
+All of that content remains reproducible: no external meshes, textures, audio, fonts, packages, or manually wired Inspector references are required.
+
 ## Game Description
 
 Explore a compact neon arena and collect all eight crystals. Obstacles create readable routes through the space, while the HUD tracks progress and elapsed time. When the last crystal is accepted by the Visual Scripting graph, the game presents a celebratory completion panel.
@@ -43,13 +49,16 @@ Explore a compact neon arena and collect all eight crystals. Obstacles create re
 - `GameFlowController.cs`: countdown, game states, timer, pause, restart, victory presentation, and scene transitions.
 - `GameHUD.cs` / `MenuController.cs` / `UIAnimator.cs`: UI presentation and animation.
 - `CollectiblePresentation.cs` / `WorldAnimator.cs` / `PlayerPresentation.cs`: visual-only motion and pickup feedback.
+- `MenuCameraMotion.cs` / `UIButtonFX.cs`: subtle menu cinematics and reusable pointer/keyboard feedback.
 - `ProceduralAudio.cs`: optional generated tones created at runtime with `AudioClip.Create`.
 
 ## Visual Scripting Implementation
 
 ### Crystal Collection
 
-The generated `Assets/Generated/VisualScripting/CollectCrystal.asset` graph begins with the installed `OnTriggerEnter` unit. It reads the other Collider, obtains its GameObject, calls `CompareTag("Player")`, branches, checks the crystal Object variable `Collected`, marks it immediately, disables the trigger Collider, reads Scene variable `CollectedCount`, adds one, writes the new count back through Visual Scripting, and calls presentation bridges. It then compares the new value against Scene variable `TotalCrystals` and invokes the victory bridge when the threshold is reached.
+The generated `Assets/Generated/VisualScripting/CollectCrystal.asset` graph is arranged left-to-right in trigger, player-validation, duplicate-protection, own-trigger, score, notification, and victory zones. It reads the other Collider, obtains its GameObject, calls `CompareTag("Player")`, branches, reads the crystal Object variable `Collected` from `This`, negates it, marks it with a boolean literal, obtains `This.GetComponent(Collider)`, disables that crystal collider, reads Scene variable `CollectedCount`, converts and adds one, writes the new count back through Visual Scripting, and calls presentation bridges. It converts Scene variable `TotalCrystals` to a float, compares the new value against the threshold, and invokes the victory bridge when the threshold is reached.
+
+The graph never disables `OnTriggerEnter.collider`; that port is the incoming Player collider. Runtime collection is guarded by the graph and is exercised by `Editor/CrystalCollectorRuntimeSmokeBatch.cs` through real PhysX triggers and Script Machines.
 
 The runtime presentation bridge can animate and update UI, but it never detects a player, increments the score, or decides whether a collection is valid.
 
@@ -105,6 +114,7 @@ Additional commands:
 - **Reliable graph generation:** the editor script targets the actual Visual Scripting 1.9.12 APIs installed in the project rather than relying on handwritten graph YAML.
 - **Repeatable setup:** all scene, prefab, UI, material, graph, tag, and build-setting wiring is performed by the generator.
 - **Clear separation:** the validator scans runtime source for trigger/collision callbacks and inspects the generated graph for the required unit families.
+- **Runtime evidence:** the smoke runner verifies 0 → 8 collection, duplicate protection, crystal-collider disabling, Player-collider preservation, and Victory without calling the bridge as a substitute for a trigger.
 
 ## Project Structure
 
@@ -113,11 +123,13 @@ Assets/Scripts/
 ├── Runtime/
 │   ├── Player/PlayerMovement.cs
 │   ├── Camera/CameraFollow.cs
+│   ├── Camera/MenuCameraMotion.cs
 │   ├── Game/GameFlowController.cs
 │   ├── Game/SceneTransition.cs
 │   ├── UI/GameHUD.cs
 │   ├── UI/MenuController.cs
 │   ├── UI/UIAnimator.cs
+│   ├── UI/UIButtonFX.cs
 │   ├── Presentation/CollectiblePresentation.cs
 │   ├── Presentation/PlayerPresentation.cs
 │   ├── Presentation/WorldAnimator.cs
@@ -127,7 +139,11 @@ Assets/Scripts/
 │   ├── VisualScriptingGraphGenerator.cs
 │   ├── GeneratorUtilities.cs
 │   ├── ProjectValidator.cs
-│   └── CrystalCollectorBatch.cs
+│   ├── CrystalCollectorBatch.cs
+│   └── CrystalCollectorRuntimeSmokeBatch.cs
+├── Tests/
+│   ├── EditMode/RuntimeFlowRegressionTests.cs
+│   └── PlayMode/CrystalCollectorRuntimeTests.cs
 ├── Docs/README.md
 ├── README.md
 └── .gitignore
@@ -141,6 +157,7 @@ Scenes/MainGame.unity
 Prefabs/Player.prefab
 Prefabs/Crystal.prefab
 Materials/*.mat
+VolumeProfiles/CrystalCollectorGlobalProfile.asset
 VisualScripting/CollectCrystal.asset
 ```
 
@@ -148,11 +165,15 @@ VisualScripting/CollectCrystal.asset
 
 1. Open the Unity project with Unity `6000.3.22f1`.
 2. Run `Tools > Crystal Collector > Generate Complete Game`.
-3. Press Play; `MainMenu` is the first enabled build scene.
+3. Press Play; generation also opens and configures `MainMenu` as the Editor Play Mode Start Scene.
 
 ## How to Validate
 
-Run `Tools > Crystal Collector > Validate Project`. The validator checks the Unity/package setup, generated scenes and prefabs, eight trigger crystals, Script Machines and shared graph, graph unit evidence, UI panels, camera/lighting, build order, and the C# / Visual Scripting separation.
+Run `Tools > Crystal Collector > Validate Project`. The validator checks the Unity/package setup, generated scenes and prefabs, exact build order, Editor Play Mode Start Scene, eight trigger crystals, Script Machines and shared graph, self-collider graph wiring, EventSystem/InputSystemUIInputModule/GraphicRaycaster setup, transition overlay state, interactive panel assignments, generated materials, post-processing volume, camera/lighting, and the C# / Visual Scripting separation.
+
+For runtime validation from a closed Unity Editor, run the generated Editor method `CrystalCollector.EditorTools.CrystalCollectorRuntimeSmokeBatch.Run` in batch mode. The checked run passed: all eight real physics-trigger collections succeeded, duplicates stayed at one count, the crystal collider was disabled, the Player collider remained enabled, and Victory began after 8 / 8.
+
+The observed `CrashReporter::UploadInsightsStackTraceContent should only be called from the main thread` text appeared alongside Unity licensing/cloud Curl failures in the Editor log. Project scripts contain no `Thread`, `Task.Run`, `async`, `Parallel`, CrashReporter, or UploadInsights usage, so it is documented as a Unity Editor/cloud-services warning rather than patched with unsafe threading code.
 
 ## Visual Scripting Screenshot
 

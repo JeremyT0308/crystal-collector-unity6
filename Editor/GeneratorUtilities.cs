@@ -101,6 +101,8 @@ namespace CrystalCollector.EditorTools
             var image = buttonObject.GetComponent<Image>();
             image.color = new Color(0.07f, 0.1f, 0.18f, 0.95f);
             var button = buttonObject.GetComponent<Button>();
+            var feedback = buttonObject.AddComponent<UIButtonFX>();
+            feedback.Configure(accent);
             var colors = button.colors;
             colors.normalColor = new Color(0.08f, 0.11f, 0.2f, 0.95f);
             colors.highlightedColor = new Color(accent.r * 0.35f + 0.12f, accent.g * 0.35f + 0.12f, accent.b * 0.35f + 0.12f, 1f);

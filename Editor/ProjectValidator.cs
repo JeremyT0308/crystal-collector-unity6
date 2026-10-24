@@ -7,7 +7,11 @@ using CrystalCollector;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+using UnityEngine.Rendering;
 using Unity.VisualScripting;
 
 namespace CrystalCollector.EditorTools
@@ -69,11 +73,20 @@ namespace CrystalCollector.EditorTools
                 var unitTypes = graph.graph.units.Select(unit => unit.GetType().Name).ToArray();
                 Check(unitTypes.Contains(nameof(OnTriggerEnter)), "Collection graph contains trigger event");
                 Check(unitTypes.Contains(nameof(GetVariable)) && unitTypes.Contains(nameof(SetVariable)), "Collection graph contains Visual Scripting variables");
-                Check(unitTypes.Contains(nameof(If)) && unitTypes.Contains(nameof(Equal)), "Collection graph contains validation branches");
+                Check(unitTypes.Contains(nameof(If)) && unitTypes.Contains(nameof(Negate)), "Collection graph contains duplicate-protection validation branches");
                 Check(unitTypes.Contains(nameof(Comparison)) && unitTypes.Contains(nameof(ScalarSum)), "Collection graph contains score increment and threshold comparison");
                 var scalarSum = graph.graph.units.OfType<ScalarSum>().FirstOrDefault();
                 Check(scalarSum != null && scalarSum.multiInputs.Count > 1 && scalarSum.multiInputs[1].hasDefaultValue, "Collection graph contains a serialized +1 increment operand");
                 Check(unitTypes.Contains(nameof(InvokeMember)) && unitTypes.Contains(nameof(SetMember)), "Collection graph contains notification and trigger disabling");
+                Check(unitTypes.Contains(nameof(This)), "Collection graph contains an explicit self reference");
+                var incomingColliderDisable = graph.graph.valueConnections.Any(connection =>
+                    connection.source.unit is OnTriggerEnter && connection.destination.unit is SetMember);
+                Check(!incomingColliderDisable, "Collection graph does not disable the incoming Player collider");
+                var setCollider = graph.graph.units.OfType<SetMember>().FirstOrDefault();
+                var ownColliderConnection = setCollider != null && graph.graph.valueConnections.Any(connection =>
+                    connection.destination == setCollider.target && connection.source.unit is InvokeMember);
+                Check(ownColliderConnection, "Collection graph disables the crystal's own Collider from This.GetComponent");
+                Check(unitTypes.Count(type => type == nameof(InvokeMember)) >= 3, "Collection graph contains self-collider and notification member calls");
                 Check(graph.graph.valueConnections.Count() + graph.graph.controlConnections.Count() >= 16, "Collection graph contains connected collection flow");
             }
 
@@ -92,6 +105,16 @@ namespace CrystalCollector.EditorTools
                 Check(machines.All(machine => machine != null && machine.nest.macro == graph), "All collectibles reference CollectCrystal graph");
                 var hud = UnityEngine.Object.FindFirstObjectByType<GameHUD>();
                 Check(hud != null && hud.pauseGroup != null && hud.victoryGroup != null, "Gameplay HUD, pause panel, and victory panel exist");
+                Check(hud != null && hud.resumeButton != null && hud.restartButton != null && hud.pauseMenuButton != null, "Pause buttons are assigned");
+                Check(hud != null && hud.playAgainButton != null && hud.victoryMenuButton != null, "Victory buttons are assigned");
+                Check(UnityEngine.Object.FindObjectsByType<EventSystem>(FindObjectsSortMode.None).Length == 1, "Gameplay has exactly one EventSystem");
+                Check(UnityEngine.Object.FindObjectsByType<InputSystemUIInputModule>(FindObjectsSortMode.None).Length == 1, "Gameplay EventSystem uses InputSystemUIInputModule");
+                Check(UnityEngine.Object.FindObjectsByType<GraphicRaycaster>(FindObjectsSortMode.None).Length >= 1, "Gameplay Canvas has GraphicRaycaster");
+                var gameplayTransition = UnityEngine.Object.FindFirstObjectByType<SceneTransition>();
+                var gameplayOverlay = gameplayTransition == null ? null : gameplayTransition.GetComponentInChildren<CanvasGroup>(true);
+                Check(gameplayTransition != null && gameplayOverlay != null && gameplayOverlay.blocksRaycasts, "Gameplay transition overlay starts deterministic and input-blocking");
+                Check(UnityEngine.Object.FindObjectsByType<Volume>(FindObjectsSortMode.None).Length >= 1, "Gameplay has generated global post-processing volume");
+                Check(UnityEngine.Object.FindObjectsByType<Renderer>(FindObjectsSortMode.None).All(renderer => renderer.sharedMaterial != null), "Gameplay renderers have generated materials");
                 Check(UnityEngine.Object.FindFirstObjectByType<Camera>() != null, "Gameplay camera exists");
                 Check(UnityEngine.Object.FindObjectsByType<Light>(FindObjectsSortMode.None).Length >= 1, "Gameplay lighting exists");
                 RestoreScene(previousScenePath, gameScene);
@@ -102,13 +125,21 @@ namespace CrystalCollector.EditorTools
                 var menuScene = EditorSceneManager.OpenScene(CrystalCollectorGenerator.MainMenuScenePath, OpenSceneMode.Single);
                 var menu = UnityEngine.Object.FindFirstObjectByType<MenuController>();
                 Check(menu != null && menu.playButton != null && menu.howToPlayButton != null && menu.quitButton != null, "Main Menu and How To Play controls exist");
+                Check(UnityEngine.Object.FindObjectsByType<EventSystem>(FindObjectsSortMode.None).Length == 1, "Main Menu has exactly one EventSystem");
+                Check(UnityEngine.Object.FindObjectsByType<InputSystemUIInputModule>(FindObjectsSortMode.None).Length == 1, "Main Menu EventSystem uses InputSystemUIInputModule");
+                Check(UnityEngine.Object.FindObjectsByType<GraphicRaycaster>(FindObjectsSortMode.None).Length >= 1, "Main Menu Canvas has GraphicRaycaster");
+                Check(menu != null && menu.howToPlayGroup != null && menu.howToPlayBackButton != null, "How To Play panel and BACK button are assigned");
+                var menuTransition = UnityEngine.Object.FindFirstObjectByType<SceneTransition>();
+                Check(menuTransition != null, "Main Menu transition overlay exists");
                 Check(UnityEngine.Object.FindFirstObjectByType<Camera>() != null, "Menu camera exists");
                 RestoreScene(previousScenePath, menuScene);
             }
 
             var buildScenes = EditorBuildSettings.scenes;
             Check(buildScenes.Length >= 2 && buildScenes[0].path == CrystalCollectorGenerator.MainMenuScenePath && buildScenes[0].enabled, "MainMenu is the first enabled build scene");
-            Check(buildScenes.Any(scene => scene.path == CrystalCollectorGenerator.MainGameScenePath && scene.enabled), "MainGame is an enabled build scene");
+            Check(buildScenes.Length >= 2 && buildScenes[1].path == CrystalCollectorGenerator.MainGameScenePath && buildScenes[1].enabled, "MainGame is the second enabled build scene");
+            var startScene = EditorSceneManager.playModeStartScene;
+            Check(startScene != null && AssetDatabase.GetAssetPath(startScene) == CrystalCollectorGenerator.MainMenuScenePath, "Editor Play Mode Start Scene is MainMenu");
 
             if (logResults)
             {

@@ -44,15 +44,18 @@ namespace CrystalCollector.EditorTools
             var collectedGet = Add(graph, collected, new Vector2(-410f, 210f));
             collected.name.SetDefaultValue("Collected");
             collected.fallback.SetDefaultValue(false);
-            var equalsFalse = Add(graph, new Equal(), new Vector2(-170f, 220f));
-            equalsFalse.b.SetDefaultValue(false);
+            var convertCollected = Add(graph, new InvokeMember(CreateMember(typeof(Convert), typeof(Convert).GetMethod(nameof(Convert.ToBoolean), new[] { typeof(object) }))), new Vector2(-170f, 360f));
+            var equalsFalse = Add(graph, new Negate(), new Vector2(90f, 220f));
             var collectedBranch = Add(graph, new If(), new Vector2(90f, 40f));
 
             var markCollected = new SetVariable { kind = VariableKind.Object };
             var collectedSet = Add(graph, markCollected, new Vector2(330f, 40f));
             markCollected.name.SetDefaultValue("Collected");
-            markCollected.input.SetDefaultValue(true);
+            var collectedTrue = Add(graph, new Literal(typeof(bool), true), new Vector2(90f, -120f));
 
+            var ownColliderMember = typeof(GameObject).GetMethod(nameof(GameObject.GetComponent), new[] { typeof(Type) });
+            var ownCollider = Add(graph, new InvokeMember(CreateMember(typeof(GameObject), ownColliderMember)), new Vector2(330f, 120f));
+            ownCollider.inputParameters[0].SetDefaultValue(typeof(Collider));
             var disableTrigger = Add(graph, new SetMember(CreateMember(typeof(Collider), typeof(Collider).GetProperty(nameof(Collider.enabled)))), new Vector2(560f, 40f));
             disableTrigger.input.SetDefaultValue(false);
 
@@ -74,9 +77,11 @@ namespace CrystalCollector.EditorTools
             var totalRead = Add(graph, totalGet, new Vector2(790f, 560f));
             totalGet.name.SetDefaultValue("TotalCrystals");
             totalGet.fallback.SetDefaultValue(8f);
-            var threshold = Add(graph, new Comparison { numeric = false }, new Vector2(1030f, 540f));
-            var completionBranch = Add(graph, new If(), new Vector2(1260f, 280f));
-            var victory = Add(graph, new InvokeMember(CreateMember(typeof(GameFlowController), typeof(GameFlowController).GetMethod(nameof(GameFlowController.NotifyVisualScriptVictory), BindingFlags.Public | BindingFlags.Static))), new Vector2(1490f, 210f));
+            var convertTotal = Add(graph, new InvokeMember(CreateMember(typeof(Convert), typeof(Convert).GetMethod(nameof(Convert.ToSingle), new[] { typeof(object) }))), new Vector2(1030f, 700f));
+            var threshold = Add(graph, new Comparison { numeric = true }, new Vector2(1260f, 540f));
+            threshold.b.SetDefaultValue(8f);
+            var completionBranch = Add(graph, new If(), new Vector2(1490f, 280f));
+            var victory = Add(graph, new InvokeMember(CreateMember(typeof(GameFlowController), typeof(GameFlowController).GetMethod(nameof(GameFlowController.NotifyVisualScriptVictory), BindingFlags.Public | BindingFlags.Static))), new Vector2(1720f, 210f));
 
             trigger.trigger.ValidlyConnectTo(compareTag.enter);
             trigger.collider.ValidlyConnectTo(gameObject.target);
@@ -84,12 +89,17 @@ namespace CrystalCollector.EditorTools
             compareTag.result.ValidlyConnectTo(playerBranch.condition);
             compareTag.exit.ValidlyConnectTo(playerBranch.enter);
 
-            collected.value.ValidlyConnectTo(equalsFalse.a);
-            equalsFalse.comparison.ValidlyConnectTo(collectedBranch.condition);
+            collected.value.ValidlyConnectTo(convertCollected.inputParameters[0]);
+            convertCollected.result.ValidlyConnectTo(equalsFalse.input);
+            equalsFalse.output.ValidlyConnectTo(collectedBranch.condition);
+            self.self.ValidlyConnectTo(collectedGet.@object);
+            self.self.ValidlyConnectTo(collectedSet.@object);
             playerBranch.ifTrue.ValidlyConnectTo(collectedBranch.enter);
             collectedBranch.ifTrue.ValidlyConnectTo(collectedSet.assign);
+            collectedTrue.output.ValidlyConnectTo(collectedSet.input);
             collectedSet.assigned.ValidlyConnectTo(disableTrigger.assign);
-            trigger.collider.ValidlyConnectTo(disableTrigger.target);
+            self.self.ValidlyConnectTo(ownCollider.target);
+            ownCollider.result.ValidlyConnectTo(disableTrigger.target);
             disableTrigger.assigned.ValidlyConnectTo(countWrite.assign);
             countRead.value.ValidlyConnectTo(convertCount.inputParameters[0]);
             convertCount.result.ValidlyConnectTo(addOne.multiInputs[0]);
@@ -98,7 +108,8 @@ namespace CrystalCollector.EditorTools
             self.self.ValidlyConnectTo(notify.inputParameters[0]);
             addOne.sum.ValidlyConnectTo(notify.inputParameters[1]);
             addOne.sum.ValidlyConnectTo(threshold.a);
-            totalRead.value.ValidlyConnectTo(threshold.b);
+            totalRead.value.ValidlyConnectTo(convertTotal.inputParameters[0]);
+            convertTotal.result.ValidlyConnectTo(threshold.b);
             notify.exit.ValidlyConnectTo(completionBranch.enter);
             threshold.aGreaterThanOrEqualToB.ValidlyConnectTo(completionBranch.condition);
             completionBranch.ifTrue.ValidlyConnectTo(victory.enter);

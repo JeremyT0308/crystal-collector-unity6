@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace CrystalCollector
 {
@@ -12,6 +13,9 @@ namespace CrystalCollector
         [SerializeField] private CanvasGroup overlay;
         [SerializeField] private float fadeDuration = 0.35f;
 
+        private bool transitionInProgress;
+        private Coroutine fadeRoutine;
+
         public void Configure(CanvasGroup fadeOverlay)
         {
             overlay = fadeOverlay;
@@ -19,21 +23,29 @@ namespace CrystalCollector
 
         private void Awake()
         {
-            if (overlay != null) overlay.alpha = 1f;
+            SetOverlayState(true, 1f);
         }
 
         private void Start()
         {
-            StartCoroutine(FadeTo(0f, fadeDuration));
+            fadeRoutine = StartCoroutine(FadeTo(0f, fadeDuration));
         }
 
         public void FadeToScene(string sceneName)
         {
+            if (transitionInProgress || string.IsNullOrWhiteSpace(sceneName)) return;
+            transitionInProgress = true;
+            if (fadeRoutine != null)
+            {
+                StopCoroutine(fadeRoutine);
+                fadeRoutine = null;
+            }
             StartCoroutine(FadeAndLoad(sceneName));
         }
 
         private IEnumerator FadeAndLoad(string sceneName)
         {
+            SetOverlayInput(true);
             yield return FadeTo(1f, fadeDuration);
             Time.timeScale = 1f;
             SceneManager.LoadScene(sceneName);
@@ -42,6 +54,11 @@ namespace CrystalCollector
         private IEnumerator FadeTo(float targetAlpha, float duration)
         {
             if (overlay == null) yield break;
+
+            if (targetAlpha > 0.001f)
+            {
+                SetOverlayInput(true);
+            }
 
             var startAlpha = overlay.alpha;
             var elapsed = 0f;
@@ -54,6 +71,27 @@ namespace CrystalCollector
             }
 
             overlay.alpha = targetAlpha;
+            if (targetAlpha <= 0.001f)
+            {
+                SetOverlayInput(false);
+            }
+        }
+
+        private void SetOverlayState(bool blocksInput, float alpha)
+        {
+            if (overlay == null) return;
+            overlay.gameObject.SetActive(true);
+            overlay.alpha = alpha;
+            SetOverlayInput(blocksInput);
+        }
+
+        private void SetOverlayInput(bool blocksInput)
+        {
+            if (overlay == null) return;
+            overlay.interactable = blocksInput;
+            overlay.blocksRaycasts = blocksInput;
+            var image = overlay.GetComponent<Graphic>();
+            if (image != null) image.raycastTarget = blocksInput;
         }
     }
 }

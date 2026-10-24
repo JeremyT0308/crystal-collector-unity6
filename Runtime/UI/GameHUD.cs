@@ -14,6 +14,7 @@ namespace CrystalCollector
         public Text timerText;
         public Text centerMessageText;
         public Text pickupMessageText;
+        public Image[] crystalIndicators;
         public CanvasGroup centerMessageGroup;
         public CanvasGroup pickupMessageGroup;
         public RectTransform crystalCounterTransform;
@@ -53,6 +54,16 @@ namespace CrystalCollector
         public void SetCrystalCount(int count, int total)
         {
             if (crystalCountText != null) crystalCountText.text = $"CRYSTALS  {count} / {total}";
+            if (crystalIndicators != null)
+            {
+                for (var i = 0; i < crystalIndicators.Length; i++)
+                {
+                    if (crystalIndicators[i] == null) continue;
+                    crystalIndicators[i].color = i < count
+                        ? new Color(0.18f, 0.92f, 1f, 1f)
+                        : new Color(0.18f, 0.3f, 0.46f, 0.45f);
+                }
+            }
             if (counterRoutine != null) StopCoroutine(counterRoutine);
             counterRoutine = StartCoroutine(PunchCounter());
         }
@@ -89,7 +100,7 @@ namespace CrystalCollector
 
         public void ShowVictory(int count, float time)
         {
-            if (victoryCountText != null) victoryCountText.text = $"{count} / 8 CRYSTALS";
+            if (victoryCountText != null) victoryCountText.text = $"{count} CRYSTALS SECURED";
             if (victoryTimeText != null) victoryTimeText.text = $"TIME: {time:0.0} s";
             HidePanel(pauseGroup);
             ShowPanel(victoryGroup, victoryPanel);
@@ -131,6 +142,8 @@ namespace CrystalCollector
         {
             if (group == null) return;
             group.alpha = 0f;
+            group.interactable = false;
+            group.blocksRaycasts = false;
             group.gameObject.SetActive(false);
         }
 
@@ -138,6 +151,8 @@ namespace CrystalCollector
         {
             if (group == null) return;
             group.alpha = 0f;
+            group.interactable = false;
+            group.blocksRaycasts = false;
             group.gameObject.SetActive(false);
         }
 

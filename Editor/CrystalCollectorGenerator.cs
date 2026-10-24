@@ -5,6 +5,8 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEditorInternal;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Unity.VisualScripting;
@@ -20,6 +22,7 @@ namespace CrystalCollector.EditorTools
         public const string ScenesRoot = GeneratedRoot + "/Scenes";
         public const string PrefabsRoot = GeneratedRoot + "/Prefabs";
         public const string MaterialsRoot = GeneratedRoot + "/Materials";
+        public const string VolumeProfilesRoot = GeneratedRoot + "/VolumeProfiles";
         public const string MainMenuScenePath = ScenesRoot + "/MainMenu.unity";
         public const string MainGameScenePath = ScenesRoot + "/MainGame.unity";
         public const string PlayerPrefabPath = PrefabsRoot + "/Player.prefab";
@@ -40,6 +43,10 @@ namespace CrystalCollector.EditorTools
         private static Material playerMaterial;
         private static Material playerAccentMaterial;
         private static Material ringMaterial;
+        private static Material architectureMaterial;
+        private static Material energyMaterial;
+        private static Material particleMaterial;
+        private static VolumeProfile volumeProfile;
 
         [MenuItem("Tools/Crystal Collector/Generate Complete Game", priority = 1)]
         public static void GenerateCompleteGame()
@@ -64,7 +71,15 @@ namespace CrystalCollector.EditorTools
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
-            Selection.activeObject = AssetDatabase.LoadAssetAtPath<SceneAsset>(MainMenuScenePath);
+            var mainMenuAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(MainMenuScenePath);
+            EditorSceneManager.playModeStartScene = mainMenuAsset;
+            if (!Application.isBatchMode)
+            {
+                var mainMenuScene = EditorSceneManager.OpenScene(MainMenuScenePath, OpenSceneMode.Single);
+                EditorSceneManager.SetActiveScene(mainMenuScene);
+                EditorSceneManager.SaveScene(mainMenuScene);
+            }
+            Selection.activeObject = mainMenuAsset;
             Debug.Log("Crystal Collector generation complete. Run Tools > Crystal Collector > Validate Project.");
         }
 
@@ -112,6 +127,7 @@ namespace CrystalCollector.EditorTools
             GeneratorUtilities.EnsureFolder(ScenesRoot);
             GeneratorUtilities.EnsureFolder(PrefabsRoot);
             GeneratorUtilities.EnsureFolder(MaterialsRoot);
+            GeneratorUtilities.EnsureFolder(VolumeProfilesRoot);
             GeneratorUtilities.EnsureFolder(GeneratedRoot + "/VisualScripting");
         }
 
@@ -125,6 +141,14 @@ namespace CrystalCollector.EditorTools
             playerMaterial = GeneratorUtilities.CreateMaterial(MaterialsRoot + "/Player.mat", new Color(0.98f, 0.58f, 0.22f), 0.18f, 0.86f, new Color(1f, 0.2f, 0.04f), 1.8f);
             playerAccentMaterial = GeneratorUtilities.CreateMaterial(MaterialsRoot + "/PlayerAccent.mat", new Color(0.3f, 0.92f, 1f), 0.15f, 0.9f, new Color(0.1f, 0.7f, 1f), 2.2f);
             ringMaterial = GeneratorUtilities.CreateMaterial(MaterialsRoot + "/GroundRing.mat", new Color(0.18f, 0.52f, 0.75f), 0.25f, 0.8f, new Color(0.05f, 0.45f, 0.9f), 2.6f);
+            architectureMaterial = GeneratorUtilities.CreateMaterial(MaterialsRoot + "/ArchitectureMetal.mat", new Color(0.035f, 0.075f, 0.14f), 0.82f, 0.9f, new Color(0.015f, 0.08f, 0.16f), 0.75f);
+            energyMaterial = GeneratorUtilities.CreateMaterial(MaterialsRoot + "/EnergyAccent.mat", new Color(0.05f, 0.42f, 0.65f), 0.15f, 0.82f, new Color(0.05f, 0.8f, 1f), 3.8f);
+            var particleShader = Shader.Find("Universal Render Pipeline/Particles/Unlit") ?? Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Standard");
+            particleMaterial = new Material(particleShader) { name = "GeneratedParticles" };
+            if (particleMaterial.HasProperty("_BaseColor")) particleMaterial.SetColor("_BaseColor", new Color(0.15f, 0.78f, 1f, 0.9f));
+            if (particleMaterial.HasProperty("_Color")) particleMaterial.SetColor("_Color", new Color(0.15f, 0.78f, 1f, 0.9f));
+            AssetDatabase.CreateAsset(particleMaterial, MaterialsRoot + "/Particles.mat");
+            CreatePostProcessProfile();
         }
 
         private static GameObject CreatePlayerPrefab()
@@ -135,6 +159,9 @@ namespace CrystalCollector.EditorTools
             var core = GeneratorUtilities.CreatePrimitive(PrimitiveType.Sphere, "HeadOrCore", root.transform, new Vector3(0f, 1.95f, 0.05f), new Vector3(0.5f, 0.5f, 0.5f), playerAccentMaterial);
             var indicator = GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "DirectionIndicator", root.transform, new Vector3(0f, 1.05f, 0.5f), new Vector3(0.16f, 0.12f, 0.5f), playerAccentMaterial);
             var marker = GeneratorUtilities.CreatePrimitive(PrimitiveType.Cylinder, "GroundMarker", root.transform, new Vector3(0f, 0.04f, 0f), new Vector3(0.82f, 0.015f, 0.82f), ringMaterial);
+            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cylinder, "HoverRing", root.transform, new Vector3(0f, 0.3f, 0f), new Vector3(0.62f, 0.025f, 0.62f), energyMaterial);
+            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "SideModuleLeft", root.transform, new Vector3(-0.58f, 1.1f, 0f), new Vector3(0.16f, 0.34f, 0.48f), playerAccentMaterial);
+            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "SideModuleRight", root.transform, new Vector3(0.58f, 1.1f, 0f), new Vector3(0.16f, 0.34f, 0.48f), playerAccentMaterial);
             var trailObject = new GameObject("Trail");
             trailObject.transform.SetParent(root.transform, false);
             trailObject.transform.localPosition = new Vector3(0f, 0.35f, -0.35f);
@@ -158,6 +185,7 @@ namespace CrystalCollector.EditorTools
             var movement = root.AddComponent<PlayerMovement>();
             var presentation = root.AddComponent<PlayerPresentation>();
             presentation.Configure(movement, body.transform, core.transform);
+            AddParticleSystem(root.transform, "ThrusterParticles", new Color(0.18f, 0.8f, 1f), true, 5f);
 
             var prefab = PrefabUtility.SaveAsPrefabAsset(root, PlayerPrefabPath);
             Object.DestroyImmediate(root);
@@ -177,6 +205,9 @@ namespace CrystalCollector.EditorTools
             shardC.transform.localRotation = Quaternion.Euler(0f, 0f, 8f);
             GeneratorUtilities.CreatePrimitive(PrimitiveType.Sphere, "GlowPart", root.transform, new Vector3(0f, 1.2f, 0f), new Vector3(0.72f, 0.72f, 0.72f), crystalMaterial);
             GeneratorUtilities.CreatePrimitive(PrimitiveType.Cylinder, "GroundRing", root.transform, new Vector3(0f, 0.04f, 0f), new Vector3(0.75f, 0.018f, 0.75f), ringMaterial);
+            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cylinder, "OrbitRingA", root.transform, new Vector3(0f, 1.1f, 0f), new Vector3(0.92f, 0.012f, 0.92f), crystalAccentMaterial).transform.localRotation = Quaternion.Euler(70f, 0f, 25f);
+            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cylinder, "OrbitRingB", root.transform, new Vector3(0f, 1.1f, 0f), new Vector3(1.08f, 0.009f, 1.08f), crystalMaterial).transform.localRotation = Quaternion.Euler(70f, 0f, -25f);
+            AddParticleSystem(root.transform, "PickupParticles", new Color(0.2f, 0.82f, 1f), true, 7f);
 
             var trigger = root.AddComponent<BoxCollider>();
             trigger.isTrigger = true;
@@ -206,6 +237,7 @@ namespace CrystalCollector.EditorTools
             GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "ShardB", showcase.transform, new Vector3(0.9f, 1.5f, 0.08f), new Vector3(0.26f, 2.4f, 0.26f), crystalMaterial).transform.localRotation = Quaternion.Euler(0f, 0f, 40f);
             GeneratorUtilities.CreatePrimitive(PrimitiveType.Cylinder, "Ring", showcase.transform, new Vector3(0f, -0.8f, 0f), new Vector3(2.15f, 0.03f, 2.15f), ringMaterial);
             showcase.AddComponent<WorldAnimator>();
+            AddParticleSystem(showcase.transform, "HeroEnergy", new Color(0.22f, 0.78f, 1f), true, 8f);
 
             for (var i = 0; i < 9; i++)
             {
@@ -222,6 +254,9 @@ namespace CrystalCollector.EditorTools
             cameraObject.transform.position = new Vector3(0f, 6.4f, -10.8f);
             GeneratorUtilities.SetLookAt(cameraObject.transform, new Vector3(0f, 1.2f, 0.5f));
             cameraObject.GetComponent<Camera>().fieldOfView = 48f;
+            cameraObject.AddComponent<MenuCameraMotion>();
+            ConfigureCameraQuality(cameraObject.GetComponent<Camera>());
+            CreateGlobalVolume(world.transform);
 
             var canvas = GeneratorUtilities.CreateCanvas("MainMenuCanvas", out _);
             var content = CreateStretchRoot("MenuContent", canvas.transform);
@@ -269,6 +304,14 @@ namespace CrystalCollector.EditorTools
             GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "SouthBoundary", world.transform, new Vector3(0f, 0.7f, -9.2f), new Vector3(19f, 1.8f, 0.55f), wallMaterial, true);
             GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "EastBoundary", world.transform, new Vector3(9.2f, 0.7f, 0f), new Vector3(0.55f, 1.8f, 19f), wallMaterial, true);
             GeneratorUtilities.CreatePrimitive(PrimitiveType.Cube, "WestBoundary", world.transform, new Vector3(-9.2f, 0.7f, 0f), new Vector3(0.55f, 1.8f, 19f), wallMaterial, true);
+            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cylinder, "CentralNexus", world.transform, new Vector3(0f, 0.08f, 0f), new Vector3(3.1f, 0.08f, 3.1f), architectureMaterial);
+            GeneratorUtilities.CreatePrimitive(PrimitiveType.Cylinder, "CentralEnergyRing", world.transform, new Vector3(0f, 0.2f, 0f), new Vector3(2.55f, 0.018f, 2.55f), energyMaterial).AddComponent<WorldAnimator>();
+            var sectorPositions = new[] { new Vector3(-6.5f, 0.05f, -6.2f), new Vector3(6.5f, 0.05f, -5.4f), new Vector3(-5.4f, 0.05f, 6.1f), new Vector3(6.2f, 0.05f, 6f) };
+            for (var i = 0; i < sectorPositions.Length; i++)
+            {
+                GeneratorUtilities.CreatePrimitive(PrimitiveType.Cylinder, "SectorPlatform_" + (i + 1), world.transform, sectorPositions[i], new Vector3(2.1f, 0.07f, 2.1f), architectureMaterial);
+                GeneratorUtilities.CreatePrimitive(PrimitiveType.Cylinder, "SectorAccent_" + (i + 1), world.transform, sectorPositions[i] + Vector3.up * 0.11f, new Vector3(1.7f, 0.015f, 1.7f), energyMaterial);
+            }
 
             var obstaclePositions = new[]
             {
@@ -290,6 +333,7 @@ namespace CrystalCollector.EditorTools
             AddDirectionalLight(world.transform, new Vector3(48f, -34f, 24f), new Color(0.6f, 0.75f, 1f), 1.3f);
             AddPointLight(world.transform, new Vector3(-5f, 3.5f, -5f), new Color(0.1f, 0.55f, 1f), 7f, 9f);
             AddPointLight(world.transform, new Vector3(5f, 3.5f, 5f), new Color(0.5f, 0.12f, 1f), 7f, 9f);
+            CreateGlobalVolume(world.transform);
 
             var variablesObject = new GameObject("Scene Variables");
             var sceneVariables = variablesObject.AddComponent<SceneVariables>();
@@ -310,6 +354,7 @@ namespace CrystalCollector.EditorTools
             var cameraObject = new GameObject("Main Camera", typeof(Camera), typeof(AudioListener), typeof(CameraFollow));
             cameraObject.transform.position = new Vector3(0f, 12f, -12f);
             cameraObject.GetComponent<Camera>().fieldOfView = 52f;
+            ConfigureCameraQuality(cameraObject.GetComponent<Camera>());
             var cameraFollow = cameraObject.GetComponent<CameraFollow>();
             cameraFollow.SetTarget(player.transform);
             GeneratorUtilities.SetLookAt(cameraObject.transform, player.transform.position + Vector3.up * 0.6f);
@@ -319,6 +364,12 @@ namespace CrystalCollector.EditorTools
             var gameHud = hudRoot.AddComponent<GameHUD>();
             var crystalCount = GeneratorUtilities.CreateText("CrystalCount", hudRoot.transform, "CRYSTALS  0 / 8", 26, Color.white, TextAnchor.MiddleLeft, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(54f, -54f), new Vector2(420f, 62f));
             crystalCount.fontStyle = FontStyle.Bold;
+            var indicators = new Image[8];
+            for (var i = 0; i < indicators.Length; i++)
+            {
+                indicators[i] = GeneratorUtilities.CreateImage("CrystalIndicator_" + (i + 1), hudRoot.transform, new Color(0.18f, 0.3f, 0.46f, 0.45f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(62f + i * 34f, -98f), new Vector2(22f, 22f));
+                indicators[i].raycastTarget = false;
+            }
             var timer = GeneratorUtilities.CreateText("Timer", hudRoot.transform, "TIME  00:00.0", 26, new Color(0.75f, 0.9f, 1f), TextAnchor.MiddleRight, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-54f, -54f), new Vector2(420f, 62f));
             var controls = GeneratorUtilities.CreateText("ControlsHint", hudRoot.transform, "WASD / ARROWS TO MOVE     •     ESC TO PAUSE", 20, new Color(0.56f, 0.68f, 0.8f), TextAnchor.MiddleCenter, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 42f), new Vector2(800f, 42f));
             var centerObject = new GameObject("CenterMessage", typeof(RectTransform));
@@ -365,6 +416,7 @@ namespace CrystalCollector.EditorTools
             flow.transition = transition;
             flow.audio = audio;
             gameHud.crystalCountText = crystalCount;
+            gameHud.crystalIndicators = indicators;
             gameHud.timerText = timer;
             gameHud.centerMessageText = centerText;
             gameHud.pickupMessageText = pickupText;
@@ -409,6 +461,68 @@ namespace CrystalCollector.EditorTools
             rect.offsetMin = Vector2.zero;
             rect.offsetMax = Vector2.zero;
             return root;
+        }
+
+        private static void CreatePostProcessProfile()
+        {
+            volumeProfile = ScriptableObject.CreateInstance<VolumeProfile>();
+            volumeProfile.name = "CrystalCollectorGlobalProfile";
+            var bloom = volumeProfile.Add<Bloom>(true);
+            bloom.threshold.Override(0.85f);
+            bloom.intensity.Override(0.65f);
+            bloom.scatter.Override(0.72f);
+            var tonemapping = volumeProfile.Add<Tonemapping>(true);
+            tonemapping.mode.Override(TonemappingMode.ACES);
+            var color = volumeProfile.Add<ColorAdjustments>(true);
+            color.postExposure.Override(0.12f);
+            color.contrast.Override(10f);
+            color.saturation.Override(8f);
+            var vignette = volumeProfile.Add<Vignette>(true);
+            vignette.intensity.Override(0.12f);
+            vignette.smoothness.Override(0.72f);
+            AssetDatabase.CreateAsset(volumeProfile, VolumeProfilesRoot + "/CrystalCollectorGlobalProfile.asset");
+        }
+
+        private static void CreateGlobalVolume(Transform parent)
+        {
+            var volumeObject = new GameObject("Global Volume", typeof(Volume));
+            volumeObject.transform.SetParent(parent, false);
+            var volume = volumeObject.GetComponent<Volume>();
+            volume.isGlobal = true;
+            volume.priority = 10f;
+            volume.sharedProfile = volumeProfile;
+        }
+
+        private static void ConfigureCameraQuality(Camera camera)
+        {
+            if (camera == null) return;
+            var additional = camera.GetComponent<UniversalAdditionalCameraData>() ?? camera.gameObject.AddComponent<UniversalAdditionalCameraData>();
+            additional.antialiasing = AntialiasingMode.SubpixelMorphologicalAntiAliasing;
+        }
+
+        private static ParticleSystem AddParticleSystem(Transform parent, string name, Color color, bool loop, float emissionRate)
+        {
+            var particleObject = new GameObject(name, typeof(ParticleSystem), typeof(ParticleSystemRenderer));
+            particleObject.transform.SetParent(parent, false);
+            var system = particleObject.GetComponent<ParticleSystem>();
+            var main = system.main;
+            main.loop = loop;
+            main.playOnAwake = true;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.35f, 0.85f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(0.15f, 0.7f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.025f, 0.08f);
+            main.startColor = color;
+            main.simulationSpace = ParticleSystemSimulationSpace.Local;
+            var emission = system.emission;
+            emission.enabled = true;
+            emission.rateOverTime = emissionRate;
+            var shape = system.shape;
+            shape.shapeType = ParticleSystemShapeType.Sphere;
+            shape.radius = 0.55f;
+            var renderer = system.GetComponent<ParticleSystemRenderer>();
+            renderer.renderMode = ParticleSystemRenderMode.Billboard;
+            renderer.sharedMaterial = particleMaterial;
+            return system;
         }
 
         private static void AddDirectionalLight(Transform parent, Vector3 rotation, Color color, float intensity)

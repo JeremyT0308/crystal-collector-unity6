@@ -48,6 +48,8 @@ namespace CrystalCollector
             if (visible)
             {
                 group.gameObject.SetActive(true);
+                group.interactable = true;
+                group.blocksRaycasts = true;
                 group.alpha = 0f;
                 target.localScale = Vector3.one * 0.86f;
                 var elapsed = 0f;
@@ -59,9 +61,13 @@ namespace CrystalCollector
                     target.localScale = Vector3.LerpUnclamped(Vector3.one * 0.86f, Vector3.one, t);
                     yield return null;
                 }
+                group.alpha = 1f;
+                target.localScale = Vector3.one;
             }
             else
             {
+                group.interactable = false;
+                group.blocksRaycasts = false;
                 yield return Fade(group, 0f, duration);
                 group.gameObject.SetActive(false);
             }

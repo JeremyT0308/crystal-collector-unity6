@@ -143,8 +143,10 @@ namespace CrystalCollector
             Time.timeScale = 1f;
             State = GameState.Countdown;
             player?.SetInputEnabled(false);
-            hud?.ShowCenterMessage("READY", 0.75f);
-            yield return new WaitForSecondsRealtime(1.1f);
+            hud?.ShowCenterMessage("MISSION\nSECURE ALL ENERGY CRYSTALS", 0.55f);
+            yield return new WaitForSecondsRealtime(0.8f);
+            hud?.ShowCenterMessage("READY", 0.65f);
+            yield return new WaitForSecondsRealtime(0.95f);
             hud?.ShowCenterMessage("GO!", 0.4f);
             yield return new WaitForSecondsRealtime(0.5f);
             State = GameState.Playing;

@@ -16,12 +16,14 @@ namespace CrystalCollector
         private Vector3 baseScale;
         private float phase;
         private bool collected;
+        private ParticleSystem[] particles;
 
         private void Awake()
         {
             basePosition = transform.localPosition;
             baseScale = transform.localScale;
             phase = (GetInstanceID() & 2047) * 0.017f;
+            particles = GetComponentsInChildren<ParticleSystem>(true);
         }
 
         private void Update()
@@ -41,6 +43,14 @@ namespace CrystalCollector
             if (collected) return;
             collected = true;
             StopAllCoroutines();
+            if (particles != null)
+            {
+                foreach (var particle in particles)
+                {
+                    if (particle == null) continue;
+                    particle.Emit(12);
+                }
+            }
             StartCoroutine(PickupRoutine());
         }
 
